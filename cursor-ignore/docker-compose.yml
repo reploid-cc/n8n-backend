@@ -1,0 +1,105 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres_n8n_support
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-n8nuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-yoursecurepassword}
+      POSTGRES_DB: ${POSTGRES_DB:-n8ndb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - n8n-support-network
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n_n8n_support
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5678:5678" # Chỉ expose cho localhost để nginx truy cập
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB:-n8ndb}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER:-n8nuser}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD:-yoursecurepassword}
+      N8N_HOST: n8n.ai-automation.cloud
+      N8N_PROTOCOL: https
+      WEBHOOK_URL: https://n8n.ai-automation.cloud/
+      GENERIC_TIMEZONE: Asia/Ho_Chi_Minh # Điều chỉnh múi giờ của bạn
+      N8N_TRUST_PROXY: "true" # Cho phép n8n tin tưởng X-Forwarded-Proto từ proxy
+      # N8N_BASIC_AUTH_ACTIVE: "true" # Bật nếu muốn thêm lớp xác thực cơ bản
+      # N8N_BASIC_AUTH_USER: "youruser"
+      # N8N_BASIC_AUTH_PASSWORD: "yourpassword"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - postgres
+    networks:
+      - n8n-support-network
+
+  nocodb:
+    image: nocodb/nocodb:latest
+    container_name: nocodb_n8n_support
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080" # Chỉ expose cho localhost, hoặc cấu hình Cloudflare Tunnel nếu muốn truy cập từ xa
+    environment:
+      NC_DB: "pg://postgres:5432?u=${POSTGRES_USER:-n8nuser}&p=${POSTGRES_PASSWORD:-yoursecurepassword}&d=${POSTGRES_DB:-n8ndb}"
+      NC_AUTH_JWT_SECRET: ${NC_AUTH_JWT_SECRET:-a_very_secure_default_secret_change_me} # NÊN thay đổi giá trị mặc định này trong file .env khi deploy production
+    volumes:
+      - nocodb_data:/usr/app/data
+    depends_on:
+      - postgres
+    networks:
+      - n8n-support-network
+
+  redis:
+    image: redis:latest
+    container_name: redis_n8n_support
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379" # Expose Redis port to localhost
+    volumes:
+      - redis_data:/data
+    networks:
+      - n8n-support-network
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_n8n_support
+    restart: unless-stopped
+    ports:
+      - "80:80" # Expose port 80 trên tất cả các interface của host
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - n8n
+    networks:
+      - n8n-support-network
+
+# Certbot service is no longer needed with Cloudflare Tunnel
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared_n8n_support
+    restart: unless-stopped
+    command: tunnel --config /home/nonroot/.cloudflared/config.yml run
+    volumes:
+      - C:\Users\PC\.cloudflared:/home/nonroot/.cloudflared # Mount thư mục chứa credentials và config
+    networks:
+      - n8n-support-network
+    depends_on:
+      - nginx # Đảm bảo nginx khởi động trước cloudflared
+
+volumes:
+  postgres_data:
+  n8n_data:
+  nocodb_data:
+  redis_data:
+
+networks:
+  n8n-support-network:
+    name: n8n-support

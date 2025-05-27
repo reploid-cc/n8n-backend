@@ -1,0 +1,45 @@
+name: n8n-worker-group
+version: '3.8'
+
+services:
+  n8n-local-worker:
+    build:
+      context: .
+      dockerfile: scripts/Dockerfile.worker
+    # image: n8nio/n8n:latest # Thay thế bằng build
+    command: worker --concurrency=10
+    restart: unless-stopped
+    deploy:
+      replicas: 9 # Luôn chạy 9 local worker
+    environment:
+      - EXECUTIONS_MODE=queue
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - QUEUE_BULL_REDIS_HOST=${QUEUE_BULL_REDIS_HOST}
+      - QUEUE_BULL_REDIS_PORT=${QUEUE_BULL_REDIS_PORT}
+      - QUEUE_BULL_REDIS_PASSWORD=${QUEUE_BULL_REDIS_PASSWORD}
+      - QUEUE_BULL_REDIS_DB=${QUEUE_BULL_REDIS_DB}
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+      - TZ=${TZ}
+      # Kích hoạt các biến kết nối CSDL
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=${DB_POSTGRESDB_HOST}
+      - DB_POSTGRESDB_PORT=${DB_POSTGRESDB_PORT}
+      - DB_POSTGRESDB_USER=${DB_POSTGRESDB_USER}
+      - DB_POSTGRESDB_PASSWORD=${DB_POSTGRESDB_PASSWORD}
+      - DB_POSTGRESDB_DATABASE=${DB_POSTGRESDB_DATABASE}
+      # - DB_POSTGRESDB_SCHEMA=${DB_POSTGRESDB_SCHEMA} # Thường không cần trừ khi bạn có schema tùy chỉnh
+      # Các biến môi trường cho Task Runners và Offload (khuyến nghị từ log)
+      - N8N_RUNNERS_ENABLED=true
+      - OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true
+      # Các biến đã có hoặc bạn muốn thêm
+      - EXECUTIONS_DATA_PRUNING=true
+      - EXECUTIONS_DATA_MAX_AGE_DAYS=30
+      - EXECUTIONS_TIMEOUT=3600
+      - NODE_FUNCTION_ALLOW_EXTERNAL=request,moment # ví dụ
+    # volumes: # Optional: if you need to mount any local files/folders
+    #   - ./local_workflows:/home/node/.n8n/workflows
+
+# Optional: Define a network if you want them to share a specific network
+# networks:
+#   local_n8n_network:
+#     driver: bridge 
