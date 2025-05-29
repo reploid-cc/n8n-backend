@@ -28,9 +28,6 @@ out/
 .env.development.local
 .env.test.local
 .env.production.local
-env.txt
-env.local.txt
-env.vps.txt
 
 # Logs
 logs
