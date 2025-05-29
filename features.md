@@ -116,7 +116,7 @@ n8n container local cho test/debug workflows, chạy ở normal mode (KHÔNG que
 - [ ] n8n latest version container
 - [ ] Normal mode (không queue mode)
 - [ ] Kết nối PostgreSQL local schema "n8n"
-- [ ] Environment variables từ .env file
+- [ ] Environment variables từ .env.local file
 - [ ] Webhook endpoints functional
 - [ ] API response time < 500ms
 - [ ] Access via n8n.ai-automation.cloud
@@ -128,7 +128,7 @@ n8n container local cho test/debug workflows, chạy ở normal mode (KHÔNG que
 - Performance optimization
 - Memory usage optimization
 
-**Dependencies:** PostgreSQL local, .env file, nginx  
+**Dependencies:** PostgreSQL local, .env.local file, nginx  
 **Edge Cases:**
 - Webhook callback failures
 - Memory leaks trong long-running workflows
@@ -160,7 +160,7 @@ Scripts tự động hóa việc setup và khởi động toàn bộ hệ thốn
 - Health check timeouts
 - Cross-platform compatibility (Windows/Linux/Mac)
 
-**Dependencies:** Docker, Docker Compose, .env file  
+**Dependencies:** Docker, Docker Compose, .env.local file  
 **Edge Cases:**
 - Partial startup failures
 - Network connectivity issues
@@ -314,7 +314,7 @@ n8n worker local container kết nối với Redis VPS và PostgreSQL VPS để 
 
 **Acceptance Criteria:**
 - [ ] n8n worker latest container
-- [ ] Kết nối Redis VPS (103.110.57.247:6379)
+- [ ] Kết nối Redis VPS (103.110.87.247:6379)
 - [ ] Kết nối PostgreSQL VPS cho shared database
 - [ ] Queue mode enabled cho worker
 - [ ] Auto-scaling dựa trên queue backlog
@@ -350,7 +350,7 @@ n8n worker local container kết nối với Redis VPS và PostgreSQL VPS để 
 Hệ thống quản lý environment variables và configuration files, với validation và documentation.
 
 **Acceptance Criteria:**
-- [ ] .env file template từ env.txt
+- [ ] .env.local và .env.vps files từ reference files
 - [ ] Environment validation script
 - [ ] Service configuration documentation
 - [ ] Port mapping documentation

@@ -181,7 +181,7 @@ Xây dựng hệ thống backend infrastructure hoàn chỉnh chạy 100% Docker
 - **Requirement:** n8n worker local cho hybrid processing với VPS
 - **Acceptance Criteria:**
   - [ ] n8n worker latest container
-  - [ ] Kết nối Redis VPS (103.110.57.247:6379)
+  - [ ] Kết nối Redis VPS (103.110.87.247:6379)
   - [ ] Kết nối PostgreSQL VPS cho shared database
   - [ ] Queue mode enabled cho worker
   - [ ] Auto-scaling dựa trên queue backlog
@@ -205,7 +205,7 @@ Xây dựng hệ thống backend infrastructure hoàn chỉnh chạy 100% Docker
 #### FR010: Configuration Management
 - **Requirement:** Centralized configuration management
 - **Acceptance Criteria:**
-  - [ ] .env file template
+  - [ ] .env.local và .env.vps files từ reference files
   - [ ] Environment validation script
   - [ ] Service configuration documentation
   - [ ] Port mapping documentation
@@ -262,7 +262,7 @@ Xây dựng hệ thống backend infrastructure hoàn chỉnh chạy 100% Docker
 
                        ┌─────────────────┐    ┌─────────────────┐
                        │ n8n Worker Local│    │   Redis VPS     │
-                       │ (Hybrid Worker) │◄──►│ (103.110.57.247)│
+                       │ (Hybrid Worker) │◄──►│ (103.110.87.247)│
                        └─────────────────┘    └─────────────────┘
 ```
 
@@ -285,15 +285,15 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/16
+        - subnet: 172.21.0.0/16
 
 services:
-  postgresql: 172.20.0.10:5432
-  redis: 172.20.0.11:6379
-  n8n: 172.20.0.20:5678
-  nocodb: 172.20.0.30:8080
-  nginx: 172.20.0.40:80,443
-  cloudflared: 172.20.0.50
+  postgresql: 172.21.0.10:5432
+  redis: 172.21.0.11:6379
+  n8n: 172.21.0.20:5678
+  nocodb: 172.21.0.30:8080
+  nginx: 172.21.0.40:80,443
+  cloudflared: 172.21.0.50
 ```
 
 ---
@@ -325,6 +325,7 @@ services:
       timeout: 5s
       retries: 5
 
+  # NOTE: Redis service chỉ dành cho VPS environment, không implement trong local
   redis:
     image: redis:7-alpine
     volumes:
@@ -415,7 +416,7 @@ LETSENCRYPT_EMAIL=reploid.cc@gmail.com
 
 # n8n Worker Local (kết nối VPS)
 DB_POSTGRESDB_HOST=<IP_VPS>
-QUEUE_BULL_REDIS_HOST=103.110.57.247
+QUEUE_BULL_REDIS_HOST=103.110.87.247
 N8N_ENCRYPTION_KEY=<GIỐNG_VPS>
 WEBHOOK_URL=https://n8n.masteryflow.cc/
 ```
@@ -428,8 +429,8 @@ WEBHOOK_URL=https://n8n.masteryflow.cc/
 echo "🚀 Starting n8n Backend Infrastructure..."
 
 # Validate environment
-if [ ! -f .env ]; then
-    echo "❌ .env file not found. Please create from env.txt template"
+if [ ! -f .env.local ]; then
+    echo "❌ .env.local file not found. Please create from env.local.txt"
     exit 1
 fi
 
@@ -555,6 +556,7 @@ echo "🔗 NocoDB: https://nocodb.ai-automation.cloud"
 **Deliverables:**
 - [ ] Working Docker Compose files
 - [ ] Database with schema
+- **M1.7 (Week 14):** .env.local file validation
 - [ ] n8n backend with queue mode
 - [ ] Basic documentation
 
@@ -562,6 +564,8 @@ echo "🔗 NocoDB: https://nocodb.ai-automation.cloud"
 - All core services start successfully
 - n8n can execute basic workflows
 - Data persists between restarts
+- .env.local file validation passed
+- n8n backend with queue mode working
 
 ### Phase 2: User Interface (Tháng 4-6)
 **Goal:** Complete UI and domain access

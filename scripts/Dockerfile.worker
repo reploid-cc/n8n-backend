@@ -1,0 +1,10 @@
+FROM n8nio/n8n:latest
+
+# Set working directory
+WORKDIR /home/node
+
+# Copy any custom configurations if needed
+# ADD ./config /home/node/.n8n/config
+
+# Default command will be overridden by docker-compose
+CMD ["worker"] 

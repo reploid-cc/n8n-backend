@@ -238,10 +238,10 @@ docker-compose.worker.yml       # Worker services (phase 4)
 
 **Lý do:** Modularity, flexibility, dễ maintenance và scalability
 
-### Environment Variables: **.env file**
-- Sử dụng file `.env` chính thức (tuân thủ cursor_ai_rules)
-- Template từ `env.txt` đã có sẵn
-- Không tự ý tạo/sửa `.env`, chỉ cập nhật `env.txt` khi cần
+### Environment Variables: **Dual Environment Files**
+- Sử dụng file `.env.local` cho local development (từ env.local.txt)
+- Sử dụng file `.env.vps` cho VPS worker (từ env.vps.txt)
+- Reference files với clear instructions
 
 ### Data Seeding: **Auto-generate**
 - Script tự động generate 50-200 records mỗi table

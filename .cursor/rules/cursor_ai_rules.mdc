@@ -4,81 +4,79 @@ globs:
 alwaysApply: true
 ---
 ---
-description: "Quy tắc vận hành và quy trình làm việc cho AI. Áp dụng khi cần xử lý yêu cầu phức tạp hoặc khi thực hiện các tác vụ theo quy trình."
-globs: "*"
+description:
+globs:
 alwaysApply: true
 ---
 
-# 📌 Quy tắc Bắt buộc – Cursor Phải Tuân Thủ
+# 📌 Mandatory Rules – Cursor Must Comply
 
-## 💬 Ngôn ngữ Phản hồi
-- **Luôn trả lời bằng tiếng Việt**  
-- **Ngôn ngữ rõ ràng, dễ hiểu, chuyên nghiệp**
+## 💬 Response Language
+- **Always reply in Vietnamese**  
+- **Use clear, understandable, and professional language**
 
-## 🔄 Quy tắc cập nhật memory-bank
-1. Cập nhật thư mục `memory-bank/` khi:
-   - Có thay đổi về kiến trúc, công nghệ, trạng thái hoặc yêu cầu
-   - Hoàn thành một tác vụ quan trọng
-   - Nhận lệnh “update memory bank”
-2. **Luôn đảm bảo** `sumup.md` và `progress.md` trong `memory-bank/` là bản mới nhất và chính xác nhất  
-3. **Không suy luận** hoặc dùng thông tin ngoài thư mục `memory-bank/`  
-4. Tất cả quyết định truy cập file phải dựa trên nội dung trong `sumup.md`
-
----
-
-# Mục Lục
-1. Nguyên tắc chung
-2. Quy trình làm việc
-3. Quản lý môi trường (.env)
+## 🔄 Memory-bank Update Rules
+1. Update the `memory-bank/` directory when:
+   - There are changes in architecture, technology, status, or requirements
+   - A major task is completed
+   - You receive the command “update memory bank”
+2. **Always ensure** `sumup.md` and `progress.md` inside `memory-bank/` are the latest and most accurate  
+3. **Do not infer** or use information outside the `memory-bank/` folder  
+4. All decisions regarding file access must be based on the content of `sumup.md`
 
 ---
 
-## 1. Nguyên tắc chung
-1. **Xác nhận yêu cầu**: AI luôn lặp lại và xác nhận lại yêu cầu ban đầu trước khi thực thi.  
-2. **Giữ tính minh bạch**: Báo cáo mọi bước thực hiện cho người dùng.  
-3. **Hỏi ý kiến kịp thời** khi:
-   - Vượt quá phạm vi đã định  
-   - Cần quyết định ngoài thẩm quyền  
-   - Phát hiện phương án tối ưu hơn  
-4. **Không ngắt quãng vô nghĩa**: AI chỉ dừng khi gặp các tình huống ở mục 3.
+# Table of Contents
+1. General Principles
+2. Workflow Process
+3. Environment Management (.env)
 
 ---
 
-## 2. Quy trình làm việc
-
-### 2.1 Xác định mục tiêu & phạm vi
-- Đối chiếu yêu cầu với phạm vi đã thống nhất.  
-- Báo ngay nếu phát hiện mâu thuẫn.
-
-### 2.2 Lập kế hoạch
-- Phân nhỏ công việc thành các bước rõ ràng.  
-- Giao việc cho module/node phù hợp.  
-- Thiết lập mốc kiểm tra tiến độ.
-
-### 2.3 Chuẩn bị & kiểm tra môi trường
-- **Luôn** đọc cấu hình từ tệp `.env` chính thức.  
-- Tệp `env.txt` chỉ dùng để tham khảo cấu trúc, **không** dùng để thực thi.
-
-### 2.4 Thực thi
-- Tuân thủ tuyệt đối kế hoạch đã phê duyệt.  
-- Cập nhật tiến độ tại các mốc quan trọng, kèm timestamp.
-
-### 2.5 Báo cáo kết quả
-- Trình bày kết quả so sánh với mục tiêu ban đầu.  
-- Tóm tắt những khó khăn và cách đã giải quyết.  
-- Ghi nhận bài học kinh nghiệm.
+## 1. General Principles
+1. **Confirm requests**: AI must always repeat and confirm the initial request before executing.  
+2. **Maintain transparency**: Report every action step to the user.  
+3. **Ask for feedback promptly** when:
+   - Scope is exceeded  
+   - A decision is needed beyond authority  
+   - A better solution is found  
+4. **No meaningless interruptions**: AI should only pause in situations listed in item 3.
 
 ---
 
-## 3. Quản lý môi trường (.env)
-1. **Không tự ý tạo hoặc sửa** tệp `.env`.  
-2. Nếu cần thêm biến/field mới:
-   - Cập nhật trong `env.txt`  
-   - Báo người dùng để cập nhật vào `.env` chính thức  
-3. **Tạm dừng** workflow cho đến khi `.env` được cập nhật và người dùng xác nhận.  
-4. **Ví dụ quy trình**:
-   1. Phát hiện thiếu biến → AI tạo Pull Request hoặc báo cáo chi tiết  
-   2. Đợi người dùng cập nhật `.env`  
-   3. Tiếp tục khi nhận được xác nhận  
+## 2. Workflow Process
+
+### 2.1 Define Goals & Scope
+- Match requests against the agreed scope.  
+- Immediately notify if any conflict is found.
+
+### 2.2 Planning
+- Break down tasks into clear steps.  
+- Assign tasks to appropriate modules/nodes.  
+- Set checkpoints for progress monitoring.
+
+### 2.3 Preparation & Environment Checks
+- **Always** read configuration from the official `.env` file.  
+- `env.txt` is only for reference structure, **not** for execution.
+
+### 2.4 Execution
+- Strictly follow the approved plan.  
+- Update progress at important checkpoints with timestamps.
+
+### 2.5 Report Results
+- Present results compared to initial goals.  
+- Summarize difficulties and how they were resolved.  
+- Document lessons learned.
 
 ---
+
+## 3. Environment Management (.env)
+1. **Do not create or modify** the `.env` or `.env.*` file without permission.  
+2. If new variables/fields are needed:
+   - Update `env.md` or `env.*.md` 
+   - Notify the user to update the official `.env` or `.env.*`
+3. **Pause workflow** until `.env` is updated and user confirms.  
+4. **Example Process**:
+   1. Detect missing variable → AI creates Pull Request or detailed report  
+   2. Wait for the user to update `.env` or `.env.*`
+   3. Resume upon receiving confirmation  

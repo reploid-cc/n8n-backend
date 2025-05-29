@@ -1,0 +1,3 @@
+# n8n local domains
+127.0.0.1 n8n.local
+127.0.0.1 nocodb.local

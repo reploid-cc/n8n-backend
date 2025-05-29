@@ -38,15 +38,15 @@ n8n Backend Local Architecture:
 ### 1. n8n Service Configuration (docker-compose.core.yml)
 ```yaml
 services:
-  n8n-backend:
+  n8n:
     image: n8nio/n8n:latest
-    container_name: n8n-backend
+    container_name: n8n
     restart: unless-stopped
     
     environment:
       # Database configuration
       DB_TYPE: postgresdb
-      DB_POSTGRESDB_HOST: postgresql-local
+      DB_POSTGRESDB_HOST: postgres
       DB_POSTGRESDB_PORT: 5432
       DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
       DB_POSTGRESDB_USER: ${POSTGRES_USER}
@@ -76,7 +76,7 @@ services:
       - "127.0.0.1:5678:5678"
       
     depends_on:
-      postgresql-local:
+      postgres:
         condition: service_healthy
         
     healthcheck:

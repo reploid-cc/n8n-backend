@@ -26,8 +26,8 @@ Thiết lập nginx reverse proxy và cloudflared tunnel cho domain access. RFC 
 ```
 Networking & Domain Architecture:
 ├── nginx Reverse Proxy (172.20.0.40)
-│   ├── n8n.ai-automation.cloud → n8n-backend:5678
-│   └── nocodb.ai-automation.cloud → nocodb-ui:8080
+│   ├── n8n.ai-automation.cloud → n8n:5678
+│   └── nocodb.ai-automation.cloud → nocodb:8080
 ├── cloudflared Tunnel (172.20.0.50)
 ├── SSL/HTTPS Configuration
 └── Domain Routing & Load Balancing
@@ -38,9 +38,9 @@ Networking & Domain Architecture:
 ### 1. nginx Configuration (docker-compose.network.yml)
 ```yaml
 services:
-  nginx-proxy:
+  nginx:
     image: nginx:alpine
-    container_name: nginx-proxy
+    container_name: nginx
     restart: unless-stopped
     
     volumes:
@@ -57,8 +57,8 @@ services:
       - "443:443"
       
     depends_on:
-      - n8n-backend
-      - nocodb-ui
+      - n8n
+      - nocodb
       
     healthcheck:
       test: ["CMD", "nginx", "-t"]
@@ -66,9 +66,9 @@ services:
       timeout: 10s
       retries: 3
 
-  cloudflared-tunnel:
+  cloudflared:
     image: cloudflare/cloudflared:latest
-    container_name: cloudflared-tunnel
+    container_name: cloudflared
     restart: unless-stopped
     
     command: tunnel --config /etc/cloudflared/config.yml run
@@ -82,7 +82,7 @@ services:
         ipv4_address: 172.20.0.50
         
     depends_on:
-      - nginx-proxy
+      - nginx
 ```
 
 ### 2. nginx Configuration (nginx/nginx.conf)

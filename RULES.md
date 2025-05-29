@@ -35,7 +35,7 @@ UI & Management:
   - cloudflared: latest
 
 Infrastructure:
-  - Redis VPS: Existing (103.110.57.247:6379)
+  - Redis VPS: Existing (103.110.87.247:6379)
   - PostgreSQL VPS: Existing (shared database)
 ```
 
@@ -101,14 +101,14 @@ DOMAIN_NAME=n8n.ai-automation.cloud
 
 #### Container & Service Names
 ```yaml
-# Pattern: component-purpose
+# Pattern: component (shortened names)
 services:
-  postgresql-local:     # PostgreSQL cho n8n local
-  n8n-backend:         # n8n local backend
+  postgres:            # PostgreSQL cho n8n local
+  n8n:                 # n8n local backend
   n8n-worker:          # n8n worker local
-  nocodb-ui:           # NocoDB interface
-  nginx-proxy:         # nginx reverse proxy
-  cloudflared-tunnel:  # Cloudflare tunnel
+  nocodb:              # NocoDB interface
+  nginx:               # nginx reverse proxy
+  cloudflared:         # Cloudflare tunnel
 ```
 
 ### Code Organization
@@ -122,7 +122,8 @@ n8n-backend/
 ├── docker-compose.network.yml
 ├── docker-compose.worker.yml
 ├── .env
-├── env.txt                    # Template reference
+├── env.local.txt              # Local environment reference
+├── env.vps.txt                # VPS environment reference
 ├── README.md
 ├── RULES.md
 ├── PRD.md
@@ -169,7 +170,7 @@ Local Development Stack:
 
 Hybrid Worker Stack:
   - n8n Worker Local (queue mode)
-  - Redis VPS connection (103.110.57.247)
+  - Redis VPS connection (103.110.87.247)
   - PostgreSQL VPS connection (shared)
 ```
 
@@ -181,15 +182,15 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/16
+        - subnet: 172.21.0.0/16
 
 # Static IP assignments
-postgresql-local: 172.20.0.10
-n8n-backend: 172.20.0.20
-nocodb-ui: 172.20.0.30
-nginx-proxy: 172.20.0.40
-cloudflared-tunnel: 172.20.0.50
-n8n-worker: 172.20.0.60
+postgres: 172.21.0.10
+n8n: 172.21.0.20
+nocodb: 172.21.0.30
+nginx: 172.21.0.40
+cloudflared: 172.21.0.50
+n8n-worker: 172.21.0.60
 ```
 
 ---
@@ -227,9 +228,11 @@ restart: unless-stopped
 volumes:
   postgres_data:
     driver: local
-  redis_data:
+  n8n_data:
     driver: local
   nginx_logs:
+    driver: local
+  cloudflared_config:
     driver: local
 ```
 
@@ -243,8 +246,8 @@ volumes:
 # - Tất cả changes phải được approve
 
 # MUST include validation
-if [ ! -f .env ]; then
-    echo "❌ .env file not found. Please create from env.txt template"
+if [ ! -f .env.local ]; then
+    echo "❌ .env.local file not found. Please create from env.local.txt"
     exit 1
 fi
 
@@ -274,12 +277,12 @@ Service Performance Targets:
 #### Resource Optimization
 ```yaml
 Memory Limits:
-  - postgresql-local: 1GB
-  - n8n-backend: 2GB
+  - postgres: 1GB
+  - n8n: 2GB
   - n8n-worker: 2GB
-  - nocodb-ui: 512MB
-  - nginx-proxy: 256MB
-  - cloudflared-tunnel: 256MB
+  - nocodb: 512MB
+  - nginx: 256MB
+  - cloudflared: 256MB
 
 CPU Limits:
   - Total system usage: < 50% average
@@ -325,8 +328,8 @@ fi
 ### Health Check Standards
 ```bash
 # MUST implement cho mọi service
-postgresql_health_check() {
-    docker exec postgresql-local pg_isready -U ${POSTGRES_USER}
+postgres_health_check() {
+    docker exec postgres pg_isready -U ${POSTGRES_USER}
 }
 
 n8n_health_check() {
@@ -334,7 +337,7 @@ n8n_health_check() {
 }
 
 redis_health_check() {
-    docker exec redis-container redis-cli ping
+    docker exec redis redis-cli ping
 }
 ```
 
@@ -442,7 +445,7 @@ setup_postgresql() {
 ```yaml
 # MUST document all configuration options
 services:
-  postgresql-local:
+  postgres:
     # PostgreSQL container cho n8n local development
     # Isolated từ VPS database để tránh conflicts
     image: postgres:latest
@@ -559,7 +562,7 @@ Monitoring:
 
 # Backup schedule
 daily_backup() {
-    docker exec postgresql-local pg_dump -U ${POSTGRES_USER} ${POSTGRES_DB} > backup_$(date +%Y%m%d).sql
+    docker exec postgres pg_dump -U ${POSTGRES_USER} ${POSTGRES_DB} > backup_$(date +%Y%m%d).sql
 }
 ```
 
@@ -594,4 +597,4 @@ daily_backup() {
 **Created:** 2024  
 **Last Updated:** 2024  
 **Status:** Active Development Guidelines  
-**Compliance:** Mandatory for all development work 
+**Compliance:** Mandatory for all development work

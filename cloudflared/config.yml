@@ -1,0 +1,24 @@
+tunnel: 53c7ad96-bf6e-4229-9bc7-b32ef0113422
+credentials-file: /home/nonroot/.cloudflared/53c7ad96-bf6e-4229-9bc7-b32ef0113422.json
+
+ingress:
+  # n8n domain routing
+  - hostname: n8n.ai-automation.cloud
+    service: http://nginx:80
+    originRequest:
+      httpHostHeader: n8n.ai-automation.cloud
+    
+  # nocodb domain routing  
+  - hostname: nocodb.ai-automation.cloud
+    service: http://nginx:80
+    originRequest:
+      httpHostHeader: nocodb.ai-automation.cloud
+    
+  # Catch-all rule
+  - service: http_status:404
+
+# Logging
+loglevel: info
+
+# Metrics
+metrics: 0.0.0.0:8080 

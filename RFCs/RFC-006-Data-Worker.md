@@ -1,189 +1,166 @@
-# RFC-006: Data Management & n8n Worker Local
+# RFC-006: Data Management & n8n Worker Local (2-Phase Approach)
 
-## Summary
-Thiết lập mock data generation và n8n Worker Local cho hybrid processing. RFC này tạo data management system với 50-200 records/table và n8n worker local kết nối VPS Redis + PostgreSQL với auto-scaling capability.
+## 📋 Overview
 
-## Features Addressed
-- **F005:** Mock Data Generation (Should Have)
-- **F009:** n8n Worker Local (Must Have)
+**RFC ID:** RFC-006  
+**Title:** Data Management & n8n Worker Local  
+**Status:** Ready for Implementation  
+**Dependencies:** RFC-001, RFC-002, RFC-005 (Complete infrastructure)  
+**Timeline:** 2 weeks (2-phase approach)  
+**Priority:** CRITICAL - Must Have  
 
-## Dependencies
-- **Previous RFCs:** RFC-001 (Docker Foundation), RFC-002 (PostgreSQL Local), RFC-005 (Networking)
-- **External Dependencies:** VPS Redis (103.110.57.247:6379), VPS PostgreSQL
+**SCOPE UPDATE:** Production Integration Scripts phase has been REMOVED per user request. This RFC now focuses on:
+1. ✅ **Phase 1:** Mock Data Generation
+2. ✅ **Phase 2:** n8n Worker Local Setup
+3. ❌ **Phase 3:** Production Integration Scripts - **REMOVED**
 
-## Builds Upon
-- Complete local infrastructure từ RFC-001 đến RFC-005
-- n8n-local-network (172.20.0.60)
-- Networking infrastructure cho VPS connectivity
+## 🎯 Objectives
 
-## Enables Future RFCs
-- Complete system functionality (Final RFC)
+### Primary Goals (2-Phase Scope):
+1. **Rich Test Data:** Generate realistic mock data cho 16 VPS tables
+2. **Worker Functionality:** n8n Worker Local với VPS connectivity
+3. **Business Logic Testing:** 22 business scenarios validation
+4. **Development Environment:** Complete localhost testing capability
 
-## Technical Approach
+### Removed Goals:
+- ❌ Production integration scripts
+- ❌ Cross-environment automation
+- ❌ Production deployment procedures
 
-### Architecture Overview
-```
-Data Management & n8n Worker Architecture:
-├── Mock Data Generation Scripts
-│   ├── 50-200 records per table
-│   ├── Realistic data patterns
-│   └── Queue system & user-tier support
-├── n8n Worker Local (172.20.0.60)
-│   ├── Queue mode enabled
-│   ├── VPS Redis connection (103.110.57.247:6379)
-│   ├── VPS PostgreSQL connection
-│   ├── Auto-scaling mechanism
-│   └── Callback URLs → n8n.masteryflow.cc
-```
+## 📊 Implementation Phases
 
-## Detailed Implementation Specifications
+### Phase 1: Mock Data Generation (Week 1)
+**Goal:** Create realistic test data cho development
 
-### 1. Mock Data Generation (scripts/generate-mock-data.sh)
-```bash
-#!/bin/bash
-# Generate mock data cho development testing
+#### Deliverables:
+- [ ] 01_users_seeding.sql - 1000 users across 4 tiers
+- [ ] 02_workflows_seeding.sql - 200 workflows với categories
+- [ ] 03_orders_seeding.sql - 500 orders với payment history
+- [ ] 04_executions_seeding.sql - 10,000 executions với metrics
+- [ ] 05_community_seeding.sql - Comments, ratings, favorites
+- [ ] 06_logging_seeding.sql - Usage logs, transactions, activities
+- [ ] 07_worker_seeding.sql - Worker performance logs
 
-set -euo pipefail
+#### Business Scenarios (22 scenarios):
+- User tier journeys (free → pro → premium → vip)
+- Order & payment scenarios (subscriptions, one-time, VIP custom)
+- Workflow execution scenarios (high-volume, error handling)
+- Community features (ratings, comments, moderation)
 
-generate_users() {
-    echo "👥 Generating user data..."
-    docker exec postgresql-local psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -c "
-        INSERT INTO n8n.users (email, firstName, lastName, password, globalRole)
-        SELECT 
-            'user' || generate_series(1,100) || '@example.com',
-            'User' || generate_series(1,100),
-            'Test' || generate_series(1,100),
-            '\$2b\$10\$hash',
-            CASE WHEN generate_series(1,100) % 10 = 0 THEN 'admin' ELSE 'user' END;
-    "
-}
+### Phase 2: n8n Worker Local (Week 2)
+**Goal:** Hybrid worker kết nối VPS production
 
-generate_workflows() {
-    echo "🔄 Generating workflow data..."
-    # Generate 50-200 workflows với realistic patterns
-}
+#### Deliverables:
+- [ ] docker-compose.worker.yml configuration
+- [ ] VPS connectivity validation (Redis + PostgreSQL)
+- [ ] Queue processing với tier priorities
+- [ ] Auto-scaling mechanism
+- [ ] Worker health monitoring
 
-generate_executions() {
-    echo "⚡ Generating execution data..."
-    # Generate execution history với various statuses
-}
-
-main() {
-    echo "📊 Generating Mock Data (RFC-006)..."
-    generate_users
-    generate_workflows
-    generate_executions
-    echo "✅ Mock data generation completed"
-}
-
-main "$@"
-```
-
-### 2. n8n Worker Local Configuration (docker-compose.worker.yml)
+#### Technical Requirements:
 ```yaml
-services:
-  n8n-worker:
-    image: n8nio/n8n:latest
-    container_name: n8n-worker
-    restart: unless-stopped
+n8n-worker-local:
+  environment:
+    # VPS Connections
+    DB_POSTGRESDB_HOST: 103.110.87.247
+    QUEUE_BULL_REDIS_HOST: 103.110.87.247
+    WEBHOOK_URL: https://n8n.masteryflow.cc/
     
-    environment:
-      # Worker mode configuration
-      EXECUTIONS_MODE: queue
-      QUEUE_BULL_REDIS_HOST: 103.110.57.247
-      QUEUE_BULL_REDIS_PORT: 6379
-      
-      # VPS Database connection
-      DB_TYPE: postgresdb
-      DB_POSTGRESDB_HOST: ${VPS_POSTGRES_HOST}
-      DB_POSTGRESDB_PORT: 5432
-      DB_POSTGRESDB_DATABASE: ${VPS_POSTGRES_DB}
-      DB_POSTGRESDB_USER: ${VPS_POSTGRES_USER}
-      DB_POSTGRESDB_PASSWORD: ${VPS_POSTGRES_PASSWORD}
-      DB_POSTGRESDB_SCHEMA: n8n
-      
-      # Worker configuration
-      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
-      WEBHOOK_URL: https://n8n.masteryflow.cc/
-      
-      # Auto-scaling
-      QUEUE_WORKER_TIMEOUT: 120
-      
-    networks:
-      n8n-local-network:
-        ipv4_address: 172.20.0.60
-        
-    depends_on:
-      - nginx-proxy
-      
-    healthcheck:
-      test: ["CMD-SHELL", "ps aux | grep -v grep | grep n8n || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+    # Worker Mode
+    EXECUTIONS_MODE: queue
+    N8N_ENCRYPTION_KEY: ${VPS_ENCRYPTION_KEY}
 ```
 
-### 3. Auto-scaling Script (scripts/autoscale-worker.sh)
-```bash
-#!/bin/bash
-# Auto-scaling mechanism cho n8n worker
+## ✅ Success Criteria (Updated)
 
-set -euo pipefail
+### Phase 1 Acceptance:
+- [ ] 50,000+ mock records across 16 tables
+- [ ] All 22 business scenarios covered
+- [ ] Foreign key relationships validated
+- [ ] Realistic tier distribution (600/250/120/30)
 
-check_queue_backlog() {
-    # Check Redis queue length
-    local queue_length=$(redis-cli -h 103.110.57.247 -p 6379 llen bull:n8n:waiting 2>/dev/null || echo "0")
-    echo "$queue_length"
-}
+### Phase 2 Acceptance:
+- [ ] VPS Redis connection functional
+- [ ] VPS PostgreSQL connection working  
+- [ ] Queue priority system working
+- [ ] Worker health monitoring active
 
-scale_workers() {
-    local queue_length=$1
-    
-    if [ "$queue_length" -gt 50 ]; then
-        echo "🔄 High queue backlog ($queue_length), scaling up..."
-        docker-compose -f docker-compose.worker.yml up -d --scale n8n-worker=3
-    elif [ "$queue_length" -lt 10 ]; then
-        echo "📉 Low queue backlog ($queue_length), scaling down..."
-        docker-compose -f docker-compose.worker.yml up -d --scale n8n-worker=1
-    fi
-}
+### Removed Criteria:
+- ❌ Production integration testing
+- ❌ Cross-environment automation
+- ❌ Production deployment validation
 
-main() {
-    local queue_length=$(check_queue_backlog)
-    echo "📊 Queue backlog: $queue_length jobs"
-    scale_workers "$queue_length"
-}
+## 🔧 Technical Architecture
 
-main "$@"
+### Mock Data Strategy:
+```sql
+-- Tier Distribution
+Free Users: 600 (60%)
+Pro Users: 250 (25%) 
+Premium Users: 120 (12%)
+VIP Users: 30 (3%)
+
+-- Data Volume
+Users: 1,000
+Workflows: 200
+Orders: 500
+Executions: 10,000
+Comments: 2,000
+Ratings: 1,500
 ```
 
-## Acceptance Criteria
+### Worker Architecture:
+```mermaid
+graph TB
+    subgraph "Local Environment"
+        A[n8n Local] --> B[PostgreSQL Local]
+        C[n8n Worker Local] --> D[Mock Data]
+    end
+    
+    subgraph "VPS Environment"
+        E[Redis VPS]
+        F[PostgreSQL VPS]
+    end
+    
+    C --> E
+    C --> F
+```
 
-### F005: Mock Data Generation
-- [ ] Script generate 50-200 records per table
-- [ ] Realistic data patterns implemented
-- [ ] Queue system tables populated
-- [ ] User-tier tables populated (Free, Pro, Premium, VIP)
-- [ ] Idempotent execution working
-- [ ] Data reset functionality available
-- [ ] Performance targets met (< 5 minutes generation)
+## 📋 Implementation Scripts
 
-### F009: n8n Worker Local
-- [ ] n8n worker latest container running
-- [ ] Queue mode enabled và functional
-- [ ] VPS Redis connection working (103.110.57.247:6379)
-- [ ] VPS PostgreSQL connection working
-- [ ] Auto-scaling mechanism functional
-- [ ] Credentials sync từ VPS working
-- [ ] Callback URLs pointing to n8n.masteryflow.cc
-- [ ] Worker health monitoring working
-- [ ] Error handling và retry logic implemented
+### Automation Scripts:
+- [ ] scripts/generate-mock-data.sh - Execute all seeding
+- [ ] scripts/setup-worker-local.sh - Worker configuration
+- [ ] scripts/validate-mock-data.sh - Data integrity checking
+- [ ] scripts/test-business-scenarios.sh - Scenario validation
 
----
+### Removed Scripts:
+- ❌ scripts/production-integration.sh
+- ❌ scripts/cross-environment-sync.sh
+- ❌ scripts/deployment-automation.sh
 
-**RFC Status:** Ready for Implementation  
-**Complexity:** High  
-**Estimated Effort:** 2-3 weeks  
-**Previous RFC:** RFC-005 (Networking & Domain)  
-**Next RFC:** None (Final RFC) 
+## 🚨 Risk Assessment
+
+### Reduced Risks (Due to Scope Reduction):
+- ✅ No production environment risks
+- ✅ No cross-environment complexity
+- ✅ Simplified testing scope
+
+### Remaining Risks:
+- **VPS Connectivity:** Redis/PostgreSQL connection stability
+- **Data Volume:** Performance với large mock datasets
+- **Memory Usage:** Worker memory optimization
+
+## 📊 Success Metrics
+
+| Phase | Metric | Target |
+|-------|--------|--------|
+| Phase 1 | Mock Data Volume | 50,000+ records |
+| Phase 1 | Business Scenarios | 22/22 working |
+| Phase 2 | VPS Connectivity | 100% uptime |
+| Phase 2 | Worker Memory | <2GB usage |
+
+**Document Version:** 2.0 (2-Phase Scope)  
+**Last Updated:** 2024-12-01  
+**Scope:** Mock Data + Worker Local Only  
+**Status:** Ready for Implementation 

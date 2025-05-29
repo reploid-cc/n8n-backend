@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  n8n-worker:
+    image: n8nio/n8n:latest
+    env_file:
+      - .env
+    command: worker
+    restart: unless-stopped
+    volumes:
+      - n8n-worker-data:/home/node/.n8n
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      # Database Configuration - Force PostgreSQL VPS
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=103.110.87.247
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8ndb
+      - DB_POSTGRESDB_USER=n8nuser
+      - DB_POSTGRESDB_PASSWORD=Ulatroi@123
+      - DB_POSTGRESDB_SCHEMA=public
+      
+      # Worker Configuration
+      - EXECUTIONS_MODE=queue
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - NODE_ENV=production
+      
+      # Queue Configuration
+      - QUEUE_BULL_REDIS_HOST=103.110.87.247
+      - QUEUE_BULL_REDIS_PORT=6379
+      - QUEUE_BULL_REDIS_DB=0
+      
+      # Worker Settings
+      - N8N_CONCURRENCY_PRODUCTION_LIMIT=10
+      - N8N_RUNNERS_ENABLED=true
+      - OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+    networks:
+      - worker-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5678/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+volumes:
+  n8n-worker-data:
+    driver: local
+
+networks:
+  worker-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16

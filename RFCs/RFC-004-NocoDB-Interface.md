@@ -35,13 +35,13 @@ NocoDB Interface Architecture:
 ### 1. NocoDB Service Configuration (docker-compose.ui.yml)
 ```yaml
 services:
-  nocodb-ui:
+  nocodb:
     image: nocodb/nocodb:latest
-    container_name: nocodb-ui
+    container_name: nocodb
     restart: unless-stopped
     
     environment:
-      NC_DB: "pg://postgresql-local:5432?u=${POSTGRES_USER}&p=${POSTGRES_PASSWORD}&d=${POSTGRES_DB}"
+      NC_DB: "pg://postgres:5432?u=${POSTGRES_USER}&p=${POSTGRES_PASSWORD}&d=${POSTGRES_DB}"
       NC_AUTH_JWT_SECRET: ${NC_AUTH_JWT_SECRET}
       NC_PUBLIC_URL: https://nocodb.${BASE_DOMAIN}
       
@@ -53,7 +53,7 @@ services:
       - "127.0.0.1:8080:8080"
       
     depends_on:
-      postgresql-local:
+      postgres:
         condition: service_healthy
         
     healthcheck:
